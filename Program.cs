@@ -1,6 +1,12 @@
 using Scalar.AspNetCore;
+using Microsoft.EntityFrameworkCore;
+using RoomBooking.Api.Data;
 
 var builder = WebApplication.CreateBuilder(args);
+
+//для регистрации контекста базы данных PostgreSql
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString));
 
 // Add services to the container.
 

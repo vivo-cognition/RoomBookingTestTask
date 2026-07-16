@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
-using RoomBookingTestTask.Models;
+using RoomBooking.Api.Models;
 
-namespace RoomBookingTestTask.Data
+namespace RoomBooking.Api.Data
 {
     public class AppDbContext : DbContext
     {

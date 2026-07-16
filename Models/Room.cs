@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace RoomBookingTestTask.Models
+namespace RoomBooking.Api.Models
 {
     public class Room
     {
