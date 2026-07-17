@@ -29,4 +29,21 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<AppDbContext>();
+        //используем асинхронное ожидание пока Docker поднимет базу данных
+        await Task.Delay(3000);
+        await context.Database.MigrateAsync();
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Ошибка при накатывании миграции на базу данных.");
+    }
+}
+
 app.Run();
