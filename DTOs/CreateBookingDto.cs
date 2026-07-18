@@ -1,16 +1,16 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.Data;
 
-namespace RoomBooking.Api.Models
+namespace RoomBooking.Api.DTOs
 {
-    public class Booking
+    public class CreateBookingDto
     {
-        public Guid Id { get; set; }
         [Required]
         public Guid RoomId { get; set; }
+
+        [Required(ErrorMessage = "Имя сотрудника обязательно")]
         public string RenterName { get; set; } = string.Empty;
+        
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
-        public Room? Room { get; set; }
     }
 }

@@ -82,5 +82,35 @@ namespace RoomBooking.Api.Controllers
 
             return Ok(response);
         }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateRoom(Guid id, [FromBody] CreateRoomDto dto)
+        {
+            var room = await _context.Rooms.FindAsync(id);
+            if (room == null) return NotFound("Комната не найдена.");
+
+            if (room.Name.ToLower() != dto.Name.ToLower())
+            {
+                var nameExists = await _context.Rooms.AnyAsync(r => r.Name.ToLower() == dto.Name.ToLower());
+                if (nameExists) return BadRequest("Комната с таким названием уже существует."); 
+            }
+            room.Name = dto.Name;
+            room.Capacity = dto.Capacity;
+            room.Description = dto.Description;
+
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteRoom(Guid id)
+        {
+            var room = await _context.Rooms.FindAsync(id);
+            if (room == null) return NotFound("Комната не найдена.");
+
+            _context.Rooms.Remove(room);
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
     }
 }
