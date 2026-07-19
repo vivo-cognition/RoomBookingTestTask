@@ -25,14 +25,14 @@ namespace RoomBooking.Api.Controllers
         public async Task<ActionResult<BookingResponseDto>> CreateBooking([FromBody] CreateBookingDto dto)
         {
             var roomExists = await _context.Rooms.AnyAsync(r => r.Id == dto.RoomId);
-            if(!roomExists) return NotFound("Такой комнаты не существует.");
+            if (!roomExists) return NotFound("Такой комнаты не существует.");
 
             if (dto.StartTime <= DateTime.UtcNow || dto.EndTime <= DateTime.UtcNow)
             {
                 return BadRequest("Время начала и окончания бронирования должны быть в будущем.");
             }
 
-            if (dto.EndTime <= dto.StartTime) 
+            if (dto.EndTime <= dto.StartTime)
             {
                 return BadRequest("Время окончания должно быть позже времени начала.");
             }
@@ -117,12 +117,12 @@ namespace RoomBooking.Api.Controllers
         {
             var quer = _context.Bookings.AsQueryable();
 
-            if(roomId.HasValue)
+            if (roomId.HasValue)
             {
                 quer = quer.Where(b => b.RoomId == roomId.Value);
             }
 
-            if(date.HasValue)
+            if (date.HasValue)
             {
                 var targetDate = date.Value.Date;
                 quer = quer.Where(b => b.StartTime.Date == targetDate);

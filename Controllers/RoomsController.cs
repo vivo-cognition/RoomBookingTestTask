@@ -92,7 +92,7 @@ namespace RoomBooking.Api.Controllers
             if (room.Name.ToLower() != dto.Name.ToLower())
             {
                 var nameExists = await _context.Rooms.AnyAsync(r => r.Name.ToLower() == dto.Name.ToLower());
-                if (nameExists) return BadRequest("Комната с таким названием уже существует."); 
+                if (nameExists) return BadRequest("Комната с таким названием уже существует.");
             }
             room.Name = dto.Name;
             room.Capacity = dto.Capacity;
