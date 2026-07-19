@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using RoomBooking.Api.Data;
 using RoomBooking.Api.DTOs;
 using RoomBooking.Api.Models;
+using RoomBookingTestTask.DTOs;
 
 namespace RoomBooking.Api.Controllers
 {
@@ -12,10 +13,12 @@ namespace RoomBooking.Api.Controllers
     public class BookingsController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly ILogger<BookingsController> _logger;
 
-        public BookingsController(AppDbContext context)
+        public BookingsController(AppDbContext context, ILogger<BookingsController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         [HttpPost]
@@ -42,11 +45,12 @@ namespace RoomBooking.Api.Controllers
 
             var hasOverlap = await _context.Bookings.AnyAsync(b =>
                 b.RoomId == dto.RoomId &&
-                b.StartTime < dto.StartTime &&
+                b.StartTime < dto.EndTime &&
                 dto.StartTime < b.EndTime);
 
             if (hasOverlap)
             {
+                _logger.LogWarning("Попытка бронирования: Комната {RoomId} уже занята на интервал {Start} - {End}", dto.RoomId, dto.StartTime, dto.EndTime);
                 return StatusCode(StatusCodes.Status409Conflict, "Комната уже занята на выбранное время.");
             }
 
@@ -71,7 +75,27 @@ namespace RoomBooking.Api.Controllers
                 EndTime = booking.EndTime
             };
 
-            return CreatedAtRoute(new {id = booking.Id}, response);
+            _logger.LogInformation("Успешно создано бронирование {BookingId} для сотрудника {Renter} в комнату {RoomId}", booking.Id, booking.RenterName, booking.RoomId);
+            return CreatedAtAction(nameof(GetBookingById), new { id = booking.Id }, response);
+
+        }
+
+        [HttpGet("{id}")]
+        public async Task<ActionResult<BookingResponseDto>> GetBookingById(Guid id)
+        {
+            var booking = await _context.Bookings.FindAsync(id);
+            if (booking == null) return NotFound("Бронирование не найдено.");
+
+            var response = new BookingResponseDto
+            {
+                Id = booking.Id,
+                RoomId = booking.RoomId,
+                RenterName = booking.RenterName,
+                StartTime = booking.StartTime,
+                EndTime = booking.EndTime
+            };
+
+            return Ok(response);
         }
 
         [HttpDelete("{id}")]
@@ -82,7 +106,41 @@ namespace RoomBooking.Api.Controllers
 
             _context.Bookings.Remove(booking);
             await _context.SaveChangesAsync();
+            _logger.LogInformation("Бронирование {BookingId} было успешно отменено", id);
             return NoContent();
+        }
+
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<BookingResponseDto>>> GetBookings(
+            [FromQuery] Guid? roomId,
+            [FromQuery] DateTime? date)
+        {
+            var quer = _context.Bookings.AsQueryable();
+
+            if(roomId.HasValue)
+            {
+                quer = quer.Where(b => b.RoomId == roomId.Value);
+            }
+
+            if(date.HasValue)
+            {
+                var targetDate = date.Value.Date;
+                quer = quer.Where(b => b.StartTime.Date == targetDate);
+            }
+
+            var bookings = await quer
+                .Select(b => new BookingResponseDto
+                {
+                    Id = b.Id,
+                    RoomId = b.RoomId,
+                    RenterName = b.RenterName,
+                    StartTime = b.StartTime,
+                    EndTime = b.EndTime
+                })
+                .ToListAsync();
+
+            return Ok(bookings);
+
         }
     }
 }
