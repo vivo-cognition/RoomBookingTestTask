@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  roombookingtesttask:
+    image: ${DOCKER_REGISTRY-}roombookingtesttask
+    build:
+      context: .
+      dockerfile: RoomBookingTestTask/Dockerfile
+    ports:
+      - "8080:8080"
+      - "8081:8081" 
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=postgres_db;Port=5432;Database=room_booking_db;Username=postgres;Password=SpecialSecretPass1010
+    depends_on:
+      - postgres_db  
+
+  postgres_db:
+   image: postgres:16-alpine
+   container_name: postgres_db
+   ports:
+      - "5432:5432"
+   environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=SpecialSecretPass1010
+      - POSTGRES_DB=room_booking_db
+   volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
